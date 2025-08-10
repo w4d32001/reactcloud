@@ -2,7 +2,7 @@
 import { useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
 
-const FLASK_API_URL = import.meta.env.VITE_FLASK_API_URL || 'http://localhost:5000';
+const FLASK_API_URL = import.meta.env.VITE_FLASK_API_URL || 'https://f-askcloud-production.up.railway.app/';
 
 export const useTranslation = () => {
   const [isTranslating, setIsTranslating] = useState(false);
