@@ -16,10 +16,12 @@ const useLogout = () => {
   return { logoutMutation, isPending, error };
 };
 export default useLogout;*/
-// hooks/useLogout.js
+
+// hooks/useLogout.js - Versión completa
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import { logout } from "../lib/api";
+import { StreamChat } from "stream-chat";
 import toast from "react-hot-toast";
 
 const useLogout = () => {
@@ -32,21 +34,39 @@ const useLogout = () => {
     error,
   } = useMutation({
     mutationFn: logout,
-    onSuccess: (data) => {
-      toast.success(data.message || "Logout successful");
+    onSuccess: async (data) => {
+      try {
+        // Desconectar Stream Chat si está conectado
+        const streamApiKey = import.meta.env.VITE_STREAM_API_KEY;
+        if (streamApiKey) {
+          const chatClient = StreamChat.getInstance(streamApiKey);
+          if (chatClient.user) {
+            await chatClient.disconnectUser();
+          }
+        }
+      } catch (streamError) {
+        console.error("Error disconnecting from Stream Chat:", streamError);
+      }
+
+      // Mostrar mensaje de éxito
+      toast.success(data.message || "Sesión cerrada exitosamente");
       
+      // Limpiar todas las queries del cache
       queryClient.clear();
       
-      queryClient.invalidateQueries({ queryKey: ["authUser"] });
-      queryClient.invalidateQueries({ queryKey: ["streamToken"] });
-
-      setTimeout(() => {
-        navigate("/login", { replace: true });
-      }, 100);
+      // Limpiar localStorage si tienes algo allí (aunque no deberías según las restricciones)
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // Redirigir al login
+      navigate("/login", { replace: true });
     },
     onError: (error) => {
       console.error("Error during logout:", error);
-      toast.error(error.response?.data?.message || "Error al cerrar sesión");
+      const errorMessage = error.response?.data?.message || 
+                          error.message || 
+                          "Error al cerrar sesión";
+      toast.error(errorMessage);
     },
   });
 
