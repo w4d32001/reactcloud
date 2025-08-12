@@ -9,13 +9,12 @@ const Navbar = () => {
   const location = useLocation();
   const isChatPage = location.pathname?.startsWith("/chat");
 
-  // const queryClient = useQueryClient();
-  // const { mutate: logoutMutation } = useMutation({
-  //   mutationFn: logout,
-  //   onSuccess: () => queryClient.invalidateQueries({ queryKey: ["authUser"] }),
-  // });
+  const { logoutMutation, isPending } = useLogout();
 
-  const { logoutMutation } = useLogout();
+  const handleLogout = () => {
+    if (isPending) return; // Prevenir múltiples clicks
+    logoutMutation();
+  };
 
   return (
     <nav className="bg-base-200 border-b border-base-300 sticky top-0 z-30 h-16 flex items-center">
@@ -51,8 +50,17 @@ const Navbar = () => {
           </div>
 
           {/* Logout button */}
-          <button className="btn btn-ghost btn-circle" onClick={logoutMutation}>
-            <LogOutIcon className="h-6 w-6 text-base-content opacity-70" />
+          <button 
+            className={`btn btn-ghost btn-circle ${isPending ? 'loading' : ''}`}
+            onClick={handleLogout}
+            disabled={isPending}
+            title="Cerrar sesión"
+          >
+            {isPending ? (
+              <span className="loading loading-spinner loading-sm"></span>
+            ) : (
+              <LogOutIcon className="h-6 w-6 text-base-content opacity-70" />
+            )}
           </button>
         </div>
       </div>
