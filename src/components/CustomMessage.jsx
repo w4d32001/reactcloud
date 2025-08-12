@@ -5,23 +5,35 @@ import { MessageTimestamp, Avatar } from 'stream-chat-react';
 import TranslatedMessage from './TranslatedMessage';
 import { Settings } from 'lucide-react';
 import TranslationSettings from './TranslationSettings';
+import useAuthUser from '../hooks/useAuthUser'; // Importar el hook de usuario
 
 const CustomMessage = () => {
   const { message } = useMessageContext();
   const { channel } = useChannelStateContext();
+  const { authUser } = useAuthUser(); // Obtener datos del usuario autenticado
   const [showSettings, setShowSettings] = useState(false);
-  
+     
   // Obtener el ID del usuario actual
   const currentUserId = channel?.state?.membership?.user?.id;
-  
-  // Configuración de traducción (puedes moverla a un contexto global)
+     
+  // Configuración de traducción con idioma nativo del usuario
   const [translationConfig, setTranslationConfig] = useState({
     enabled: true,
-    targetLanguage: 'es',
+    targetLanguage: authUser?.nativeLanguage || 'es', // Usar idioma nativo
     showOriginal: true
   });
 
   const isMyMessage = message.user?.id === currentUserId;
+
+  // Actualizar configuración cuando cambie el usuario
+  useState(() => {
+    if (authUser?.nativeLanguage && translationConfig.targetLanguage !== authUser.nativeLanguage) {
+      setTranslationConfig(prev => ({
+        ...prev,
+        targetLanguage: authUser.nativeLanguage
+      }));
+    }
+  }, [authUser?.nativeLanguage]);
 
   return (
     <div className={`flex items-start space-x-3 mb-4 ${isMyMessage ? 'flex-row-reverse space-x-reverse' : ''}`}>
@@ -29,8 +41,8 @@ const CustomMessage = () => {
       {!isMyMessage && (
         <div className="flex-shrink-0">
           <Avatar 
-            image={message.user?.image} 
-            name={message.user?.name || message.user?.id} 
+            image={message.user?.image}
+            name={message.user?.name || message.user?.id}
             size={32}
           />
         </div>
@@ -45,7 +57,7 @@ const CustomMessage = () => {
               {message.user?.name || message.user?.id}
             </span>
             <MessageTimestamp 
-              message={message} 
+              message={message}
               className="text-xs text-gray-500 dark:text-gray-400"
             />
           </div>
@@ -54,7 +66,7 @@ const CustomMessage = () => {
         {/* Contenido del mensaje */}
         <div className={`rounded-2xl px-4 py-2 relative group ${
           isMyMessage 
-            ? 'bg-blue-500 text-white' 
+            ? 'bg-blue-500 text-white'
             : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100'
         }`}>
           {/* Botón de configuración de traducción */}
@@ -73,6 +85,7 @@ const CustomMessage = () => {
             <TranslatedMessage 
               message={message}
               currentUserId={currentUserId}
+              currentUser={authUser} // Pasar datos del usuario actual
               targetLanguage={translationConfig.targetLanguage}
             />
           ) : (
@@ -86,7 +99,7 @@ const CustomMessage = () => {
         {isMyMessage && (
           <div className="mt-1 self-end">
             <MessageTimestamp 
-              message={message} 
+              message={message}
               className="text-xs text-gray-500 dark:text-gray-400"
             />
           </div>
@@ -99,6 +112,8 @@ const CustomMessage = () => {
               config={translationConfig}
               onConfigChange={setTranslationConfig}
               onClose={() => setShowSettings(false)}
+              userNativeLanguage={authUser?.nativeLanguage} // Pasar idioma nativo
+              userLearningLanguage={authUser?.learningLanguage} // Pasar idioma de aprendizaje
             />
           </div>
         )}

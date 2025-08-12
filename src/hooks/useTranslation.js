@@ -8,14 +8,11 @@ export const useTranslation = () => {
   const [isTranslating, setIsTranslating] = useState(false);
   const [translationCache, setTranslationCache] = useState(new Map());
 
-  // Función para traducir texto
   const translateText = useCallback(async (text, targetLang = 'es', sourceLang = 'auto') => {
     if (!text || !text.trim()) return null;
 
-    // Crear clave para cache
     const cacheKey = `${text.trim()}-${sourceLang}-${targetLang}`;
     
-    // Verificar cache
     if (translationCache.has(cacheKey)) {
       return translationCache.get(cacheKey);
     }

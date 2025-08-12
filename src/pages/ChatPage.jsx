@@ -206,7 +206,6 @@ const ChatPage = () => {
     }
   };
 
-  // Cleanup function para desconectar el cliente cuando el componente se desmonte
   useEffect(() => {
     return () => {
       if (chatClient) {

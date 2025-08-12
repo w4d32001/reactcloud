@@ -2,15 +2,23 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from '../hooks/useTranslation';
 import { Languages, Eye, EyeOff, RotateCcw } from 'lucide-react';
 
-const TranslatedMessage = ({ message, currentUserId, targetLanguage = 'es' }) => {
+const TranslatedMessage = ({ 
+  message, 
+  currentUserId, 
+  currentUser, // Nuevo prop para obtener el usuario actual
+  targetLanguage = null // Ahora es opcional
+}) => {
   const [translatedText, setTranslatedText] = useState(null);
   const [showOriginal, setShowOriginal] = useState(false);
   const [error, setError] = useState(null);
   const { translateText, isTranslating } = useTranslation();
 
-  // Solo traducir si el mensaje no es del usuario actual
   const shouldTranslate = message.user?.id !== currentUserId;
   const messageText = message.text || '';
+  
+  // Usar el idioma nativo del usuario actual, o 'es' como fallback
+  const userNativeLanguage = currentUser?.nativeLanguage || 'es';
+  const translationTarget = targetLanguage || userNativeLanguage;
 
   useEffect(() => {
     const translateMessage = async () => {
@@ -18,7 +26,7 @@ const TranslatedMessage = ({ message, currentUserId, targetLanguage = 'es' }) =>
 
       try {
         setError(null);
-        const translated = await translateText(messageText, targetLanguage, 'auto');
+        const translated = await translateText(messageText, translationTarget, 'auto');
         
         if (translated && translated !== messageText) {
           setTranslatedText(translated);
@@ -30,7 +38,7 @@ const TranslatedMessage = ({ message, currentUserId, targetLanguage = 'es' }) =>
     };
 
     translateMessage();
-  }, [messageText, shouldTranslate, targetLanguage, translateText]);
+  }, [messageText, shouldTranslate, translationTarget, translateText]);
 
   const handleRetryTranslation = async () => {
     if (!shouldTranslate || !messageText.trim()) return;
@@ -39,7 +47,7 @@ const TranslatedMessage = ({ message, currentUserId, targetLanguage = 'es' }) =>
     setTranslatedText(null);
     
     try {
-      const translated = await translateText(messageText, targetLanguage, 'auto');
+      const translated = await translateText(messageText, translationTarget, 'auto');
       if (translated && translated !== messageText) {
         setTranslatedText(translated);
       }
@@ -86,6 +94,12 @@ const TranslatedMessage = ({ message, currentUserId, targetLanguage = 'es' }) =>
               </button>
             </div>
           </div>
+          {/* Mostrar a qué idioma se tradujo */}
+          <div className="mt-1">
+            <span className="text-xs text-blue-500 dark:text-blue-400">
+              Traducido a {getLanguageName(translationTarget)}
+            </span>
+          </div>
         </div>
       ) : error ? (
         <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 pl-3 py-2 rounded-r-md">
@@ -119,6 +133,26 @@ const TranslatedMessage = ({ message, currentUserId, targetLanguage = 'es' }) =>
       )}
     </div>
   );
+};
+
+// Función auxiliar para obtener el nombre del idioma
+const getLanguageName = (code) => {
+  const languages = {
+    'es': 'Español',
+    'en': 'English',
+    'fr': 'Français',
+    'de': 'Deutsch',
+    'it': 'Italiano',
+    'pt': 'Português',
+    'zh': '中文',
+    'ja': '日本語',
+    'ko': '한국어',
+    'ar': 'العربية',
+    'ru': 'Русский',
+    // Agrega más idiomas según necesites
+  };
+  
+  return languages[code] || code.toUpperCase();
 };
 
 export default TranslatedMessage;

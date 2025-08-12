@@ -58,7 +58,7 @@ const SignUpPage = () => {
                             <div className="space-y-4">
                                 <div>
                                     <h2 className="text-xl font-semibold">
-                                        Create an Account
+                                        Crea una cuenta
                                     </h2>
                                     <p className="text-sm opacity-70">
                                         ¡Únete a Streamify y comienza tu
